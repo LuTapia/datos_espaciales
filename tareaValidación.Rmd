@@ -5,6 +5,7 @@ date: "25-06-2021"
 output: html_document
 ---
 ```{r}
+#Se cargan librerías y datos
 library(readxl)
 library(stringr)
 options(scipen = 999)
@@ -13,56 +14,57 @@ donacionesDATA <- read_excel("Donaciones_2017.xlsx",
         "numeric", "text", "text", "text", 
         "text", "numeric", "numeric", "numeric", 
         "numeric"))
-##eliminamos la ultima columna que solo tenia valores NA
+#Eliminamos la última columna que solo tenía valores NA
 donacionesDATAClean <- donacionesDATA[,c(1:11)]
 
-##cambio formato de fechas
+#Cambio en formato de fechas
 donacionesDATAClean$FECHA <- format(donacionesDATAClean$FECHA,"%d/%m/%Y") 
 
-##cambio letras a mayusculas
+#Cambio de caracteres a mayúsculas
 donacionesDATAClean$`DONANTE` <- toupper(donacionesDATAClean$`DONANTE`)
 donacionesDATAClean$`DONATARIO` <- toupper(donacionesDATAClean$`DONATARIO`)
 donacionesDATAClean$`NOMBRE DEL PROYECTO` <- toupper(donacionesDATAClean$`NOMBRE DEL PROYECTO`)
 
-##se sacan los puntos
+#Se sacan los puntos
 donacionesDATAClean$`DONANTE` <- gsub('[.]', '', donacionesDATAClean$`DONANTE`)
 donacionesDATAClean$`DONATARIO` <- gsub('[.]', '', donacionesDATAClean$`DONATARIO`)
 donacionesDATAClean$`NOMBRE DEL PROYECTO` <- gsub('[.]', '', donacionesDATAClean$`NOMBRE DEL PROYECTO`)
 
-##se quitan espacios que sobran antes o despues de algunos datos
+#Se quitan los espacios que sobran antes o después de algunos datos
 donacionesDATAClean$`DONANTE` <- str_trim(donacionesDATAClean$`DONANTE`, side = "both")
 donacionesDATAClean$`DONATARIO` <- str_trim(donacionesDATAClean$`DONATARIO`, side = "both")
 donacionesDATAClean$`NOMBRE DEL PROYECTO` <- str_trim(donacionesDATAClean$`NOMBRE DEL PROYECTO`, side = "both")
 donacionesDATAClean$`RUT` <- str_trim(donacionesDATAClean$`RUT`, side = "both")
 
-##se reemplazan caracteres con tildes y la letra Ñ
+#Se reemplazan caracteres con tíldes y la letra Ñ por N
 donacionesDATAClean$`DONANTE` <- chartr('ÁÉÍÓÚÑ','AEIOUN', donacionesDATAClean$`DONANTE`)
 donacionesDATAClean$`DONATARIO` <- chartr('ÁÉÍÓÚÑ','AEIOUN', donacionesDATAClean$`DONATARIO`)
 donacionesDATAClean$`NOMBRE DEL PROYECTO` <- chartr('ÁÉÍÓÚÑ','AEIOUN', donacionesDATAClean$`NOMBRE DEL PROYECTO`)
 
-##homogenizacion ruts
+#Homogenización RUT
 donacionesDATAClean$RUT <- gsub('[.]', '', donacionesDATAClean$RUT)
 listaRutSinGuion <- substr(donacionesDATAClean$RUT, 1, (nchar(donacionesDATAClean$RUT)-1))
 listaGuionesRut <- substr(donacionesDATAClean$RUT, nchar(donacionesDATAClean$RUT), nchar(donacionesDATAClean$RUT))
 donacionesDATAClean$RUT <- paste0(listaRutSinGuion, sep="-", listaGuionesRut)
-##se arreglan ruts con valor NA-NA
+#Se arreglan RUT con valor NA-NA
 numerox <- as.integer(length(donacionesDATAClean$RUT))
 for (i in 1:numerox){
   if (donacionesDATAClean$RUT[i] == "NA-NA"){
       donacionesDATAClean$RUT[i] <- donacionesDATAClean$DONANTE[i]
     }
 }
-##existian 3 datos que tenian rut NA-NA que no tenian su RUT en el DONANTE, por lo que hubo que asignarlos manualmente
+#Existían 3 observaciones que tenían RUT NA-NA, por lo que se asignaron manualmente
 donacionesDATAClean$RUT[donacionesDATAClean$RUT == "PLAZA LA SERENA SA"] <- "96795700-3"
 donacionesDATAClean$RUT[donacionesDATAClean$RUT == "PROFESIONAL KARTING Y CIA LTDA"] <- "77399340-8"
-##no se pudo encontrar el RUT del DONANTE "MONEDA", Se le asigna 00000000-0
+#No se pudo encontrar el RUT del DONANTE "MONEDA", y Se le asigna 00000000-0
 donacionesDATAClean$RUT[donacionesDATAClean$RUT == "MONEDA"] <- "00000000-0"
 
-##el DONANTE Julio C Grandon tenia mal escrito el RUT, tampoco se pudo identificar el RUT de esta persona, se le asigna 00000001-0
+#El DONANTE Julio C Grandon tenia mal escrito el RUT, y tampoco se pudo identificar el RUT de esta persona, por lo que se le asigna 00000001-0
 donacionesDATAClean$RUT[donacionesDATAClean$DONANTE == "JULIO C GRANDON,"] <- "00000001-0"
 
 
-##homogenizacion montos
+#Homogenizacion montos
+#Se elimina el signo $ y el separador de miles '.' 
 donacionesDATAClean$`MONTO TOTAL DONACIÓN` <- gsub('[$]', '', donacionesDATAClean$`MONTO TOTAL DONACIÓN`)
 donacionesDATAClean$`MONTO TOTAL DONACIÓN` <- gsub('[.]', '', donacionesDATAClean$`MONTO TOTAL DONACIÓN`)
 
@@ -72,30 +74,30 @@ donacionesDATAClean$`MONTO INSTITUCIÓN` <- gsub('[.]', '', donacionesDATAClean$
 donacionesDATAClean$`MONTO FONDO MIXTO` <- gsub('[$]', '', donacionesDATAClean$`MONTO FONDO MIXTO`)
 donacionesDATAClean$`MONTO FONDO MIXTO` <- gsub('[.]', '', donacionesDATAClean$`MONTO FONDO MIXTO`)
 
-##se cambian valores NA en MONTO FONDO MIXTO por numeros 0
+#Se cambian valores NA en MONTO FONDO MIXTO por 0
 donacionesDATAClean$`MONTO FONDO MIXTO`[is.na(donacionesDATAClean$`MONTO FONDO MIXTO`)] <- 0
 
-##FOLIO INSTITUCION se cambia de character a numerico
+#FOLIO INSTITUCION se cambia de character a numeric
 donacionesDATAClean$`FOLIO INSTITUCIÓN` <- as.numeric(donacionesDATAClean$`FOLIO INSTITUCIÓN`)
 
-##habian algunos DONANTE que no tenian nombre, se le asigno el RUT como nombre para identificarlo y que no quedaran valores NA
+#Habian algunas observaciones que no tenían DONANTE asociado, y se le asigno el RUT como nombre para identificarlo y que no quedaran valores NA
 for (i in 1:numerox){
   if (is.na(donacionesDATAClean$DONANTE[i])){
       donacionesDATAClean$DONANTE[i] <- donacionesDATAClean$RUT[i]
     }
 }
 
-##se cambia el dato "Nº 297 Registro Mideplan" ya que es el unico dato que no es numerico dentro de la columna FOLIO INSTITUCIÓN 
+#Se cambia el dato "Nº 297 Registro Mideplan" ya que es el unico dato que no es numerico dentro de la columna FOLIO INSTITUCIÓN 
 donacionesDATAClean$`FOLIO INSTITUCIÓN`[donacionesDATAClean$`FOLIO INSTITUCIÓN` == "Nº 297 Registro Mideplan"] <- "297"
 
-##se comprobo que el campo DONANTE tenia valores "... ... ..." en los proyectos con el rut 10939176-K, se busco personalmente en internet el nombre del donante y se arreglo el valor
+#Se comprobó que el campo DONANTE tenia valores "... ... ..." en los proyectos con el rut 10939176-K, se busco personalmente en internet el nombre del donante y se arregló el valor
 donacionesDATAClean$`DONANTE`[donacionesDATAClean$`RUT` == "10939176-K"] <- "MILKA DANITZA BASIC EISSLER"
 
-##se comprobo que habia 3 proyectos con el campo RUT en valores "NA-NA" y en el nombre del DONANTE estaba el verdadero RUT, se procede a arreglar manualmente
+#Se comprobó que había 3 proyectos con el campo RUT en valores "NA-NA" y en el nombre del DONANTE estaba el verdadero RUT, se procede a arreglar manualmente
 donacionesDATAClean$`RUT`[donacionesDATAClean$`DONANTE` == "10238719-8"] <- "10238719-8"
 donacionesDATAClean$`RUT`[donacionesDATAClean$`DONANTE` == "10655087-5"] <- "10655087-5"
 donacionesDATAClean$`RUT`[donacionesDATAClean$`DONANTE` == "10719649-8"] <- "10719649-8"
-
+#Se agrega DONANTE, gracias al dato RUT
 donacionesDATAClean$DONANTE[donacionesDATAClean$`DONANTE` == "10238719-8"] <- "CARLOS JOUANNE LANGLOIS"
 donacionesDATAClean$DONANTE[donacionesDATAClean$`DONANTE` == "10655087-5"] <- "MATIAS GUZMAN HONORATO"
 donacionesDATAClean$DONANTE[donacionesDATAClean$`DONANTE` == "10719649-8"] <- "IGNACIO VALDES DONOSO"
